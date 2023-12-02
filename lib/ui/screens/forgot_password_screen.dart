@@ -3,6 +3,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:task_manager/ui/screens/pin_verification_screen.dart';
 import 'package:task_manager/ui/screens/signup_screen.dart';
 import 'package:task_manager/ui/widget/body_background.dart';
+
+import '../../data/network_caller/network_caller.dart';
+import '../../data/network_caller/network_response.dart';
+import '../../data/utility/urls.dart';
+import '../widget/snack_message.dart';
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -14,6 +19,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailTEController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _forgetPasswordInProgress = false;
+  Future<void>_recoveryVerifyEmail() async {
+    if (_formKey.currentState!.validate()) {
+      _forgetPasswordInProgress = true;
+      if(mounted){
+        setState(() {});
+      }
+      final NetworkResponse response =
+      await NetworkCaller()
+          .getRequest(Urls.recoverVerifyEmail(_emailTEController.text.trim()));
+      _forgetPasswordInProgress = false;
+      if(mounted){
+        setState(() {});
+      }
+      if (response.isSuccess) {
+        Navigator.push(context, MaterialPageRoute(builder: (context)=> PinVerificationScreen(email: _emailTEController.text.trim())));
+      } else {
+        if (mounted) {
+          showSnackMessage(
+              context, 'Account Creation failed', true);
+        }
+      }
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return  Scaffold(
@@ -52,11 +80,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         const SizedBox(height: 16,),
                         SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton(onPressed: (){
-                              Navigator.push(context, MaterialPageRoute(builder: (context)=>const PinVerificationScreen()));
-                            },
-                                child: const Icon(Icons.arrow_circle_right_outlined))
-                        ),
+                            child: Visibility(
+                              visible: _forgetPasswordInProgress == false,
+                              replacement: Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                              child: ElevatedButton(
+                                  onPressed: _recoveryVerifyEmail,
+                                  child: const Icon(Icons.arrow_circle_right_outlined)),
+                            )),
                         const SizedBox(height: 48,),
 
                         Row(

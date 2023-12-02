@@ -61,11 +61,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    const PinVerificationScreen()));
+
                       },
                       child: const Text('Confirm Password'))),
               const SizedBox(

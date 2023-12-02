@@ -8,7 +8,8 @@ import 'package:task_manager/ui/widget/body_background.dart';
 import 'login_screen.dart';
 
 class PinVerificationScreen extends StatefulWidget {
-  const PinVerificationScreen({super.key});
+  const PinVerificationScreen({super.key, required this.email});
+  final String email;
 
   @override
   State<PinVerificationScreen> createState() => _PinVerificationScreenState();
@@ -29,7 +30,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
               .textTheme
               .titleLarge),
           const SizedBox(height: 8,),
-          const Text('A 6 digits OTP will be send to your email address',
+           Text('A 6 digits OTP will be send in ${widget.email}',
               style: TextStyle(
                   color: Colors.grey, fontWeight: FontWeight.w600)),
           const SizedBox(height: 24,),
