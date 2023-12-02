@@ -52,6 +52,10 @@ class _NewTasksScreenState extends State<NewTasksScreen> {
       setState(() {});
     }
   }
+  Future<void> fullPageRefresh() async {
+    getNewTaskList();
+    getTaskCountSummaryList();
+  }
   @override
   void initState() {
     // TODO: implement initState
@@ -90,7 +94,7 @@ class _NewTasksScreenState extends State<NewTasksScreen> {
                 visible: getNewTaskInProgress == false,
                 replacement: const Center(child: CircularProgressIndicator()),
                 child: RefreshIndicator(
-                  onRefresh: getNewTaskList,
+                  onRefresh: fullPageRefresh,
                   child: ListView.builder(
                       itemCount: taskListModel.taskList?.length ?? 0,
                       itemBuilder: (context, index) {
