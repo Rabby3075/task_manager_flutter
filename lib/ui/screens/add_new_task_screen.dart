@@ -1,6 +1,8 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:task_manager/data/network_caller/network_caller.dart';
 import 'package:task_manager/data/network_caller/network_response.dart';
 import 'package:task_manager/ui/widget/body_background.dart';
@@ -8,6 +10,7 @@ import 'package:task_manager/ui/widget/profile_summary_card.dart';
 import 'package:task_manager/ui/widget/snack_message.dart';
 
 import '../../data/utility/urls.dart';
+import '../controllers/new_task_controller.dart';
 
 class AddNewTaskScreen extends StatefulWidget {
   const AddNewTaskScreen({super.key});
@@ -110,9 +113,10 @@ class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
         setState(() {});
       }
       if(response.isSuccess){
+        Get.find<NewTaskController>().getNewTaskList();
         _clearTextFields();
         if(mounted){
-          //Navigator.pop(context);
+          Navigator.pop(context);
           showSnackMessage(context, 'New Task added');
         }
       }else{

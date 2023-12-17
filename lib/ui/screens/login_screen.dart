@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:task_manager/data/models/user_model.dart';
-import 'package:task_manager/data/network_caller/network_caller.dart';
-import 'package:task_manager/data/network_caller/network_response.dart';
-import 'package:task_manager/ui/controllers/auth_controller.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:task_manager/ui/controllers/login_controller.dart';
 import 'package:task_manager/ui/screens/forgot_password_screen.dart';
 import 'package:task_manager/ui/screens/main_bottom_nav_screen.dart';
 import 'package:task_manager/ui/screens/signup_screen.dart';
 import 'package:task_manager/ui/widget/body_background.dart';
-import '../../data/utility/urls.dart';
 import '../widget/snack_message.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailTEController = TextEditingController();
   final TextEditingController _passwordTEController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  bool _signinInProgress = false;
+  final LoginController _loginController = Get.find<LoginController>();
 
   @override
   Widget build(BuildContext context) {
@@ -83,18 +80,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(
                   height: 16,
                 ),
-                Visibility(
-                  visible: _signinInProgress == false,
-                  replacement: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                  child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                          onPressed: () => login(),
-                          child:
-                              const Icon(Icons.arrow_circle_right_outlined))),
-                ),
+                GetBuilder<LoginController>(builder: (loginController) {
+                  return Visibility(
+                    visible: loginController.signinInProgress == false,
+                    replacement: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                    child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                            onPressed: () => login(),
+                            child:
+                                const Icon(Icons.arrow_circle_right_outlined))),
+                  );
+                }),
                 const SizedBox(
                   height: 48,
                 ),
@@ -144,42 +143,40 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> login() async {
-    if (_formKey.currentState!.validate()) {
-      _signinInProgress = true;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    // _signinInProgress = true;
+    // update();  //set state
+    // NetworkResponse response = await NetworkCaller().postRequest(Urls.login,
+    //     body: {
+    //       "email": email.trim(),
+    //       "password": password
+    //     },isLogin: true);
+    // _signinInProgress = false;
+    // update();//set state
+    final response = await _loginController.login(
+        _emailTEController.text.trim(), _passwordTEController.text.trim());
+    if (response /*.isSuccess*/) {
+      // await AuthController.SaveUserInformation(
+      //     response.jsonResponse?['token'],
+      //     UserModel.fromJson(response.jsonResponse?['data']));
+      // return true;
       if (mounted) {
-        setState(() {});
+        // Navigator.push(context, MaterialPageRoute(builder: (context)=> MainBottomNavbar()));
+        Get.offAll(const MainBottomNavbar());
       }
-      NetworkResponse response = await NetworkCaller().postRequest(Urls.login,
-          body: {
-            "email": _emailTEController.text.trim(),
-            "password": _passwordTEController.text
-          },isLogin: true);
-      _signinInProgress = false;
+    } else {
+      // if (response.statusCode == 401) {
       if (mounted) {
-        setState(() {});
+        showSnackMessage(context, _loginController.failureMessage, true);
       }
-      if (response.isSuccess) {
-        await AuthController.SaveUserInformation(
-            response.jsonResponse?['token'],
-            UserModel.fromJson(response.jsonResponse?['data']));
-        _clearTextFields();
-        if (mounted) {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const MainBottomNavbar()));
-        }
-      } else {
-        if (response.statusCode == 401) {
-          if (mounted) {
-            showSnackMessage(context, 'Please check your email/password', true);
-          }
-        } else {
-          if (mounted) {
-            showSnackMessage(context, 'Login failed try again', true);
-          }
-        }
-      }
+      // } else {
+      //   // if (mounted) {
+      //   //   showSnackMessage(context, response.errorMessage.toString(), true);
+      //   // }
+      //   _failedMessage = response.errorMessage.toString();
+      // }
     }
   }
 

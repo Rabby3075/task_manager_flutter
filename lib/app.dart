@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_instance/src/bindings_interface.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:task_manager/ui/controllers/login_controller.dart';
+import 'package:task_manager/ui/controllers/new_task_controller.dart';
 import 'package:task_manager/ui/screens/splash_screen.dart';
 
 class TaskManager extends StatelessWidget {
@@ -7,7 +12,7 @@ class TaskManager extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  MaterialApp(
+    return  GetMaterialApp(
       navigatorKey: navigationKey,
       home: const SplashScreen(),
       theme: ThemeData(
@@ -35,6 +40,16 @@ class TaskManager extends StatelessWidget {
           )
         )
       ),
+      initialBinding: ControllerBinder(),
     );
   }
+}
+class ControllerBinder extends Bindings{
+  @override
+  void dependencies() {
+    Get.put(LoginController());
+    Get.put(NewTaskController());
+    // TODO: implement dependencies
+  }
+
 }
