@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:task_manager/ui/controllers/pin_verification_controller.dart';
 import 'package:task_manager/ui/screens/reset_password_screen.dart';
 import 'package:task_manager/ui/widget/body_background.dart';
 import '../../data/network_caller/network_caller.dart';
@@ -22,58 +25,35 @@ class PinVerificationScreen extends StatefulWidget {
 class _PinVerificationScreenState extends State<PinVerificationScreen> {
   final TextEditingController _pinTEController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  bool _pinVerificationInProgress = false;
-  StreamController<ErrorAnimationType>? errorController;
-  bool hasError = false;
-  String currentText = "";
+  final PinVerificationController _pinVerificationController = Get.find<PinVerificationController>();
 
   @override
   void initState() {
-    errorController = StreamController<ErrorAnimationType>();
+    _pinVerificationController.errorController = StreamController<ErrorAnimationType>();
     super.initState();
   }
 
   Future<void> _pinVerification() async {
     _formKey.currentState!.validate();
-    // conditions for validating
-    if (currentText.length != 6) {
-      errorController!
-          .add(ErrorAnimationType.shake); // Triggering error shake animation
-      setState(() => hasError = true);
-    } else {
-      setState(
-        () async {
-          hasError = false;
-          _pinVerificationInProgress = true;
-          if (mounted) {
-            setState(() {});
-          }
-          final NetworkResponse response = await NetworkCaller().getRequest(
-              Urls.pinVerification(widget.email, _pinTEController.text.trim()));
-          _pinVerificationInProgress = false;
-          if (mounted) {
-            setState(() {});
-          }
-          if (response.isSuccess) {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => ResetPasswordScreen(email: widget.email, otp: _pinTEController.text.trim())));
+    final response = await _pinVerificationController.pinVerification(widget.email, _pinTEController.text.trim());
+
+          if (response) {
+            // Navigator.push(context,
+            //     MaterialPageRoute(builder: (context) => ResetPasswordScreen(email: widget.email, otp: _pinTEController.text.trim())));
+            Get.off(ResetPasswordScreen(email: widget.email, otp: _pinTEController.text.trim()));
           } else {
             if (mounted) {
               showSnackMessage(
                   context,
-                  response.jsonResponse?['data'] ??
-                      'Error message not available',
+                  _pinVerificationController.errorMessage,
                   true);
             }
           }
-        },
-      );
-    }
   }
 
   @override
   void dispose() {
-    errorController!.close();
+    _pinVerificationController.errorController!.close();
     super.dispose();
   }
 
@@ -120,7 +100,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                   animationDuration: Duration(milliseconds: 300),
                   // backgroundColor: Colors.blue.shade50,
                   enableActiveFill: true,
-                  errorAnimationController: errorController,
+                  errorAnimationController: _pinVerificationController.errorController,
                   controller: _pinTEController,
                   validator: (v) {
                     if (v!.isEmpty) {
@@ -136,9 +116,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                   },
                   onChanged: (value) {
                     log(value);
-                    setState(() {
-                      currentText = value;
-                    });
+                      _pinVerificationController.currentText = value;
                   },
                   beforeTextPaste: (text) {
                     log("Allowing to paste $text");
@@ -154,7 +132,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 30.0),
                   child: Text(
-                    hasError ? "*Please fill up all the cells properly" : "",
+                    _pinVerificationController.hasError ? "*Please fill up all the cells properly" : "",
                     style: const TextStyle(
                       color: Colors.red,
                       fontSize: 12,
@@ -167,14 +145,18 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                 ),
                 SizedBox(
                     width: double.infinity,
-                    child: Visibility(
-                      visible: _pinVerificationInProgress == false,
-                      replacement: const Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                      child: ElevatedButton(
-                          onPressed: _pinVerification,
-                          child: const Text('Verify')),
+                    child: GetBuilder<PinVerificationController>(
+                      builder: (pinVerificationController) {
+                        return Visibility(
+                          visible: pinVerificationController.pinVerificationInProgress == false,
+                          replacement: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                          child: ElevatedButton(
+                              onPressed: _pinVerification,
+                              child: const Text('Verify')),
+                        );
+                      }
                     )),
                 const SizedBox(
                   height: 48,
