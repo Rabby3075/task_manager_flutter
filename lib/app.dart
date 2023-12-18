@@ -4,6 +4,8 @@ import 'package:get/get_instance/src/bindings_interface.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:task_manager/ui/controllers/add_new_task_controller.dart';
 import 'package:task_manager/ui/controllers/auth_controller.dart';
+import 'package:task_manager/ui/controllers/cancel_controller.dart';
+import 'package:task_manager/ui/controllers/completed_controller.dart';
 import 'package:task_manager/ui/controllers/edit_profile_controller.dart';
 import 'package:task_manager/ui/controllers/login_controller.dart';
 import 'package:task_manager/ui/controllers/new_task_controller.dart';
@@ -59,6 +61,8 @@ class ControllerBinder extends Bindings{
     Get.put(AuthController());
     Get.put(AddNewTaskController());
     Get.put(ProgressController());
+    Get.put(CompletedController());
+    Get.put(CancelController());
     // TODO: implement dependencies
   }
 

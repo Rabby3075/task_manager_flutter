@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:task_manager/data/models/task_count.dart';
-import 'package:task_manager/data/models/task_count_summary_list_model.dart';
-import 'package:task_manager/data/models/task_list_model.dart';
-import 'package:task_manager/data/network_caller/network_caller.dart';
-import 'package:task_manager/data/network_caller/network_response.dart';
-import 'package:task_manager/data/utility/urls.dart';
 import 'package:task_manager/ui/controllers/new_task_controller.dart';
 import 'package:task_manager/ui/screens/add_new_task_screen.dart';
-
 import '../widget/profile_summary_card.dart';
 import '../widget/summary_card.dart';
 import '../widget/task_item_card.dart';

@@ -6,7 +6,7 @@ import '../../data/network_caller/network_caller.dart';
 import '../../data/network_caller/network_response.dart';
 import '../../data/utility/urls.dart';
 
-class ProgressController extends GetxController{
+class CompletedController extends GetxController{
   bool _getNewTaskInProgress =false;
   bool _getTaskCountSummaryInProgress = false;
   TaskListModel _taskListModel = TaskListModel();
@@ -25,7 +25,7 @@ class ProgressController extends GetxController{
     // }
     update();
     final NetworkResponse response =
-    await NetworkCaller().getRequest(Urls.getNewTask('Progress'));
+    await NetworkCaller().getRequest(Urls.getNewTask('Completed'));
     _getNewTaskInProgress = false;
     // if (mounted) {
     //   setState(() {});

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:task_manager/ui/controllers/cancel_controller.dart';
 
 import '../../data/models/task_count.dart';
 import '../../data/models/task_count_summary_list_model.dart';
@@ -18,45 +21,13 @@ class CancelledTasksScreen extends StatefulWidget {
 }
 
 class _CancelledTasksScreenState extends State<CancelledTasksScreen> {
-  bool getNewTaskInProgress = false;
-  bool getTaskCountSummaryInProgress = false;
-  TaskListModel taskListModel = TaskListModel();
-  Future<void> getNewTaskList() async {
-    getNewTaskInProgress = true;
-    if (mounted) {
-      setState(() {});
-    }
-    final NetworkResponse response = await NetworkCaller().getRequest(Urls.getNewTask('Cancelled'));
-    if (response.isSuccess) {
-      taskListModel = TaskListModel.fromJson(response.jsonResponse!);
-    }
-    getNewTaskInProgress = false;
-    if (mounted) {
-      setState(() {});
-    }
-  }
-  TaskSummaryCountListModel taskSummaryCountListModel = TaskSummaryCountListModel();
-  Future<void> getTaskCountSummaryList() async {
-    getTaskCountSummaryInProgress = true;
-    if (mounted) {
-      setState(() {});
-    }
-    final NetworkResponse response = await NetworkCaller().getRequest(Urls.getTaskStatusCount);
-    if (response.isSuccess) {
-      taskSummaryCountListModel = TaskSummaryCountListModel.fromJson(response.jsonResponse!);
-    }
-    getTaskCountSummaryInProgress = false;
-    if (mounted) {
-      setState(() {});
-    }
-  }
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    getNewTaskList();
-    getTaskCountSummaryList();
+    Get.find<CancelController>().fullPageRefresh();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,39 +35,53 @@ class _CancelledTasksScreenState extends State<CancelledTasksScreen> {
           child: Column(
             children: [
               const ProfileSummary(),
-              Visibility(
-                  visible: getTaskCountSummaryInProgress == false && (taskSummaryCountListModel.taskCountList?.isNotEmpty ?? false),
-                  replacement: const LinearProgressIndicator(),
-                  child: SizedBox(
-                    height: 120,
-                    child: RefreshIndicator(
-                      onRefresh: getNewTaskList,
+              GetBuilder<CancelController>(builder: (cancelController) {
+                return Visibility(
+                    visible: cancelController.getTaskCountSummaryInProgress ==
+                        false,
+                    replacement: const LinearProgressIndicator(),
+                    child: SizedBox(
+                      height: 120,
                       child: ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          itemCount: taskSummaryCountListModel.taskCountList?.length ?? 0,
-                          itemBuilder: (context,index){
-                            TaskCount taskCount = taskSummaryCountListModel.taskCountList![index];
-                            return FittedBox(child: SummaryCard(count: taskCount.sum.toString(), title: taskCount.sId??''));
+                          itemCount: cancelController.taskSummaryCountListModel
+                              .taskCountList?.length ??
+                              0,
+                          itemBuilder: (context, index) {
+                            TaskCount taskCount = cancelController
+                                .taskSummaryCountListModel
+                                .taskCountList![index];
+                            return FittedBox(
+                                child: SummaryCard(
+                                    count: taskCount.sum.toString(),
+                                    title: taskCount.sId ?? ''));
                           }),
-                    ),
-                  )),
-              Expanded(
-                  child: Visibility(
-                    visible: getNewTaskInProgress == false,
-                    replacement: const Center(child: CircularProgressIndicator()),
+                    ));
+              }),
+              Expanded(child:
+              GetBuilder<CancelController>(builder: (cancelController) {
+                return Visibility(
+                  visible: cancelController.getNewTaskInProgress == false,
+                  replacement: const Center(child: CircularProgressIndicator()),
+                  child: RefreshIndicator(
+                    onRefresh: () => cancelController.fullPageRefresh(),
                     child: ListView.builder(
-                        itemCount: taskListModel.taskList?.length ?? 0,
+                        itemCount:
+                        cancelController.taskListModel.taskList?.length ??
+                            0,
                         itemBuilder: (context, index) {
-                          return TaskItemCard(task: taskListModel.taskList![index],onStatusChange: (){
-                            getNewTaskList();
-                          },showProgress: (inprogress){
-                            getNewTaskInProgress = inprogress;
-                            if(mounted){
-                              setState(() {});
-                            }
-                          },);
+                          return TaskItemCard(
+                            task: cancelController
+                                .taskListModel.taskList![index],
+                            onStatusChange: () {
+                              cancelController.getNewTaskList();
+                            },
+                            showProgress: (inprogress) {},
+                          );
                         }),
-                  ))
+                  ),
+                );
+              }))
             ],
           ),
         ));
