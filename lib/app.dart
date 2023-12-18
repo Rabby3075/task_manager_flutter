@@ -7,10 +7,12 @@ import 'package:task_manager/ui/controllers/auth_controller.dart';
 import 'package:task_manager/ui/controllers/cancel_controller.dart';
 import 'package:task_manager/ui/controllers/completed_controller.dart';
 import 'package:task_manager/ui/controllers/edit_profile_controller.dart';
+import 'package:task_manager/ui/controllers/forgetPasswordController.dart';
 import 'package:task_manager/ui/controllers/login_controller.dart';
 import 'package:task_manager/ui/controllers/new_task_controller.dart';
 import 'package:task_manager/ui/controllers/progress_task_controller.dart';
 import 'package:task_manager/ui/controllers/registration_controller.dart';
+import 'package:task_manager/ui/controllers/set_password_controller.dart';
 import 'package:task_manager/ui/screens/splash_screen.dart';
 
 class TaskManager extends StatelessWidget {
@@ -63,6 +65,8 @@ class ControllerBinder extends Bindings{
     Get.put(ProgressController());
     Get.put(CompletedController());
     Get.put(CancelController());
+    Get.put(ForgetPasswordController());
+    Get.put(SetPasswordController());
     // TODO: implement dependencies
   }
 

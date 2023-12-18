@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:task_manager/data/network_caller/network_caller.dart';
 import 'package:task_manager/data/network_caller/network_response.dart';
+import 'package:task_manager/ui/controllers/cancel_controller.dart';
+import 'package:task_manager/ui/controllers/completed_controller.dart';
+import 'package:task_manager/ui/controllers/new_task_controller.dart';
+import 'package:task_manager/ui/controllers/progress_task_controller.dart';
 
 import '../../data/models/task.dart';
 import '../../data/utility/urls.dart';
@@ -29,7 +35,15 @@ class _TaskItemCardState extends State<TaskItemCard> {
     final NetworkResponse response = await NetworkCaller()
         .getRequest(Urls.updateTaskStatus(widget.task.sId ?? '', status));
     if (response.isSuccess) {
-      widget.onStatusChange();
+      if(widget.task.status == 'New'){
+        Get.find<NewTaskController>().fullPageRefresh();
+      }else if(widget.task.status == 'Progress'){
+        Get.find<ProgressController>().fullPageRefresh();
+      }else if(widget.task.status == 'Completed'){
+        Get.find<CompletedController>().fullPageRefresh();
+      }else if(widget.task.status == 'Cancelled'){
+        Get.find<CancelController>().fullPageRefresh();
+      }
     }
     widget.showProgress(false);
   }
@@ -39,7 +53,16 @@ class _TaskItemCardState extends State<TaskItemCard> {
     final response = await NetworkCaller()
         .getRequest(Urls.deleteTask(widget.task.sId ?? ''));
     if (response.isSuccess) {
-      widget.onStatusChange();
+      //widget.onStatusChange();
+      if(widget.task.status == 'New'){
+        Get.find<NewTaskController>().fullPageRefresh();
+      }else if(widget.task.status == 'Progress'){
+        Get.find<ProgressController>().fullPageRefresh();
+      }else if(widget.task.status == 'Completed'){
+        Get.find<CompletedController>().fullPageRefresh();
+      }else if(widget.task.status == 'Cancelled'){
+        Get.find<CancelController>().fullPageRefresh();
+      }
     }
     widget.showProgress(false);
   }

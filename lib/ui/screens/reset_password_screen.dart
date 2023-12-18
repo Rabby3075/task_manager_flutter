@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:task_manager/ui/controllers/set_password_controller.dart';
 import 'package:task_manager/ui/screens/login_screen.dart';
 import 'package:task_manager/ui/screens/pin_verification_screen.dart';
 import 'package:task_manager/ui/screens/signup_screen.dart';
@@ -11,7 +14,9 @@ import '../../data/utility/urls.dart';
 import '../widget/snack_message.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({super.key, required this.email, required this.otp});
+  const ResetPasswordScreen(
+      {super.key, required this.email, required this.otp});
+
   final String email;
   final String otp;
 
@@ -21,9 +26,12 @@ class ResetPasswordScreen extends StatefulWidget {
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final TextEditingController _passwordTEController = TextEditingController();
-  final TextEditingController _confirmPasswordTEController = TextEditingController();
+  final TextEditingController _confirmPasswordTEController =
+      TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  bool _setPasswordInProgress = false;
+  final SetPasswordController _setPasswordController =
+      Get.find<SetPasswordController>();
+
   bool hasError = false;
   String errorMessage = '';
   @override
@@ -60,7 +68,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   decoration: const InputDecoration(
                     hintText: 'Password',
                   ),
-                  validator: (String? value){
+                  validator: (String? value) {
                     if (value?.isEmpty ?? true) {
                       return 'Password required';
                     } else if (value!.length < 5) {
@@ -78,7 +86,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   decoration: const InputDecoration(
                     hintText: 'Confirm Password',
                   ),
-                  validator: (String? value){
+                  validator: (String? value) {
                     if (value?.isEmpty ?? true) {
                       return 'Password required';
                     } else if (value!.length < 5) {
@@ -103,15 +111,19 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 ),
                 SizedBox(
                     width: double.infinity,
-                    child: Visibility(
-                      visible: _setPasswordInProgress == false,
-                      replacement: const Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                      child: ElevatedButton(
-                          onPressed: _ResetPassword,
-                          child: const Text('Confirm Password')),
-                    )),
+                    child: GetBuilder<SetPasswordController>(
+                        builder: (setPasswordController) {
+                      return Visibility(
+                        visible: setPasswordController.setPasswordInProgress ==
+                            false,
+                        replacement: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                        child: ElevatedButton(
+                            onPressed: _ResetPassword,
+                            child: const Text('Confirm Password')),
+                      );
+                    })),
                 const SizedBox(
                   height: 48,
                 ),
@@ -127,7 +139,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                     TextButton(
                         onPressed: () {
-                          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>const LoginScreen()), (route) => false);
+                          Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const LoginScreen()),
+                              (route) => false);
                         },
                         child: const Text(
                           "Sign In",
@@ -142,54 +158,35 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       ),
     )));
   }
-  Future<void>_ResetPassword() async {
+
+  Future<void> _ResetPassword() async {
     if (_formKey.currentState!.validate()) {
-      if(_passwordTEController.text.trim() == _confirmPasswordTEController.text.trim()){
-        _setPasswordInProgress = true;
-        hasError = false;
-        if(mounted){
-          setState(() {});
+      final response = await _setPasswordController.ResetPassword(
+          _passwordTEController.text.trim(),
+          _confirmPasswordTEController.text.trim(),
+          widget.email,
+          widget.otp);
+
+      if (response) {
+        _clearTextFields();
+        if (mounted) {
+          showSnackMessage(context, _setPasswordController.successMessage);
+          // Navigator.pushAndRemoveUntil(
+          //     context,
+          //     MaterialPageRoute(
+          //         builder: (context) => const LoginScreen()),
+          //         (route) => false);
+          Get.offAll(const LoginScreen());
         }
-        final NetworkResponse response =
-        await NetworkCaller()
-            .postRequest(Urls.registration,
-            body: {
-              "email":widget.email,
-              "OTP":widget.otp,
-              "password":_passwordTEController.text.trim()
-            }
-        );
-        _setPasswordInProgress = false;
-        if(mounted){
-          setState(() {});
-        }
-        if (response.isSuccess) {
-          _clearTextFields();
-          if (mounted) {
-            showSnackMessage(
-                context, 'Password reset successfully');
-            Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const LoginScreen()),
-                    (route) => false);
-          }
-        } else {
-          if (mounted) {
-            showSnackMessage(
-                context, 'Failed to reset the password', true);
-          }
-        }
-      }else{
-        hasError = true;
-        errorMessage = "Password and Confirm password doesn't match";
-        if(mounted){
-          setState(() {});
+      } else {
+        if (mounted) {
+          showSnackMessage(context, _setPasswordController.errorMessage, true);
         }
       }
     }
   }
-  void _clearTextFields(){
+
+  void _clearTextFields() {
     _passwordTEController.clear();
     _confirmPasswordTEController.clear();
   }
