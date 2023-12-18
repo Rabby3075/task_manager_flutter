@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../../data/models/task_count_summary_list_model.dart';
 import '../../data/models/task_list_model.dart';
 import '../../data/network_caller/network_caller.dart';
 import '../../data/network_caller/network_response.dart';
@@ -9,9 +10,13 @@ class NewTaskController extends GetxController{
 
 
   bool _getNewTaskInProgress =false;
+  bool _getTaskCountSummaryInProgress = false;
   TaskListModel _taskListModel = TaskListModel();
+  TaskSummaryCountListModel taskSummaryCountListModel =
+  TaskSummaryCountListModel();
 
   bool get getNewTaskInProgress => _getNewTaskInProgress;
+  bool get getTaskCountSummaryInProgress => _getTaskCountSummaryInProgress;
   TaskListModel get taskListModel => _taskListModel;
 
   Future<bool> getNewTaskList() async {
@@ -20,7 +25,7 @@ class NewTaskController extends GetxController{
     // if (mounted) {
     //   setState(() {});
     // }
-
+    update();
     final NetworkResponse response =
     await NetworkCaller().getRequest(Urls.getNewTask('New'));
     _getNewTaskInProgress = false;
@@ -35,5 +40,24 @@ class NewTaskController extends GetxController{
     update();
     return isSuccess;
 
+  }
+  Future<bool> getTaskCountSummaryList() async {
+    bool isSuccess = false;
+    _getTaskCountSummaryInProgress = true;
+    update();
+    final NetworkResponse response =
+    await NetworkCaller().getRequest(Urls.getTaskStatusCount);
+    if (response.isSuccess) {
+      taskSummaryCountListModel =
+          TaskSummaryCountListModel.fromJson(response.jsonResponse!);
+      isSuccess = true;
+    }
+    _getTaskCountSummaryInProgress = false;
+    update();
+    return isSuccess;
+  }
+  Future<void> fullPageRefresh() async {
+    getNewTaskList();
+    getTaskCountSummaryList();
   }
 }

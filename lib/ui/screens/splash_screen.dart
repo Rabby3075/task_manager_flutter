@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> goToLogin() async {
-    final bool isLogin = await AuthController.checkAuthState();
+    final bool isLogin = await Get.find<AuthController>().checkAuthState();
     log(isLogin.toString());
     Future.delayed(const Duration(seconds: 2)).then((value) {
       // Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=> !isLogin? const LoginScreen() : const MainBottomNavbar()), (route) => false);

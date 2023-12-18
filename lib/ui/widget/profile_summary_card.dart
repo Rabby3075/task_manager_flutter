@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:task_manager/ui/controllers/auth_controller.dart';
 import 'package:task_manager/ui/screens/edit_profile_screen.dart';
 import 'package:task_manager/ui/screens/login_screen.dart';
@@ -46,51 +47,56 @@ class _ProfileSummaryState extends State<ProfileSummary> {
     // Uint8List imageBytes =
     //     const Base64Decoder().convert(AuthController.user?.photo ?? '');
 
-    return ListTile(
-      onTap: () {
-        if (widget.enableOnTap) {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const EditProfileScreen()));
-        }
-      },
-      leading: CircleAvatar(
-        child: AuthController.user?.photo == null
-            ? const Icon(Icons.person)
-            : ClipRRect(
-                borderRadius: BorderRadius.circular(30),
-                child: _buildUserImage(AuthController.user?.photo)
-              ),
-      ),
-      title: Text(
-        fullName,
-        style:
-            const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-      ),
-      subtitle: Text(
-        AuthController.user?.email ?? '<email>',
-        style: const TextStyle(color: Colors.white),
-      ),
-      trailing: IconButton(
-        onPressed: () async {
-          await AuthController.ClearAuthData();
-          Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
-              (route) => false);
-        },
-        icon: const Icon(
-          Icons.logout,
-          color: Colors.white,
-        ),
-      ),
-      tileColor: Colors.green,
+    return GetBuilder<AuthController>(
+      builder: (authController) {
+        return ListTile(
+          onTap: () {
+            if (widget.enableOnTap) {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const EditProfileScreen()));
+            }
+          },
+          leading: CircleAvatar(
+            child: authController.user?.photo == null
+                ? const Icon(Icons.person)
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: _buildUserImage(authController.user?.photo)
+                  ),
+          ),
+          title: Text(
+            fullName,
+            style:
+                const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          ),
+          subtitle: Text(
+            authController.user?.email ?? '<email>',
+            style: const TextStyle(color: Colors.white),
+          ),
+          trailing: IconButton(
+            onPressed: () async {
+              await AuthController.ClearAuthData();
+              // Navigator.pushAndRemoveUntil(
+              //     context,
+              //     MaterialPageRoute(builder: (context) => const LoginScreen()),
+              //     (route) => false);
+              Get.offAll(const LoginScreen());
+            },
+            icon: const Icon(
+              Icons.logout,
+              color: Colors.white,
+            ),
+          ),
+          tileColor: Colors.green,
+        );
+      }
     );
   }
 
 
   String get fullName {
-    return '${AuthController.user?.firstName ?? ''} ${AuthController.user?.lastName ?? ''}';
+    return '${Get.find<AuthController>().user?.firstName ?? ''} ${Get.find<AuthController>().user?.lastName ?? ''}';
   }
 }

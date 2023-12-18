@@ -23,7 +23,7 @@ class LoginController extends GetxController{
       _signinInProgress = false;
       update();//set state
       if (response.isSuccess) {
-        await AuthController.SaveUserInformation(
+        await Get.find<AuthController>().SaveUserInformation(
             response.jsonResponse?['token'],
             UserModel.fromJson(response.jsonResponse?['data']));
         return true;

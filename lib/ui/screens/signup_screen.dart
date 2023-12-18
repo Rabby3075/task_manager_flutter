@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:task_manager/data/network_caller/network_caller.dart';
+import 'package:task_manager/ui/controllers/registration_controller.dart';
 import 'package:task_manager/ui/widget/body_background.dart';
 import 'package:task_manager/ui/widget/snack_message.dart';
 
@@ -21,7 +24,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _mobileTEController = TextEditingController();
   final TextEditingController _passwordTEController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  bool _signUpInProgress = false;
+  final RegistrationController _registrationController = Get.find<RegistrationController>();
+
 
   @override
   Widget build(BuildContext context) {
@@ -137,14 +141,18 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 SizedBox(
                     width: double.infinity,
-                    child: Visibility(
-                      visible: _signUpInProgress == false,
-                      replacement: Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                      child: ElevatedButton(
-                          onPressed: _SignUp,
-                          child: const Icon(Icons.arrow_circle_right_outlined)),
+                    child: GetBuilder<RegistrationController>(
+                      builder: (registrationController) {
+                        return Visibility(
+                          visible: registrationController.signUpInProgress == false,
+                          replacement: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                          child: ElevatedButton(
+                              onPressed: _SignUp,
+                              child: const Icon(Icons.arrow_circle_right_outlined)),
+                        );
+                      }
                     )),
                 const SizedBox(
                   height: 48,
@@ -178,33 +186,34 @@ class _SignupScreenState extends State<SignupScreen> {
   }
   Future<void>_SignUp() async {
     if (_formKey.currentState!.validate()) {
-      _signUpInProgress = true;
-      if(mounted){
-        setState(() {});
-      }
-      final NetworkResponse response =
-      await NetworkCaller()
-          .postRequest(Urls.registration,body: {
-        "email":_emailTEController.text.trim(),
-        "firstName":_firstNameTEController.text.trim(),
-        "lastName":_lastNameTEController.text.trim(),
-        "mobile":_mobileTEController.text.trim(),
-        "password":_passwordTEController.text,
-      });
-      _signUpInProgress = false;
-      if(mounted){
-        setState(() {});
-      }
-      if (response.isSuccess) {
+      // _signUpInProgress = true;
+      // if(mounted){
+      //   setState(() {});
+      // }
+      // final NetworkResponse response =
+      // await NetworkCaller()
+      //     .postRequest(Urls.registration,body: {
+      //   "email":_emailTEController.text.trim(),
+      //   "firstName":_firstNameTEController.text.trim(),
+      //   "lastName":_lastNameTEController.text.trim(),
+      //   "mobile":_mobileTEController.text.trim(),
+      //   "password":_passwordTEController.text,
+      // });
+      // _signUpInProgress = false;
+      // if(mounted){
+      //   setState(() {});
+      // }
+      final response = await _registrationController.SignUp(_emailTEController.text.trim(), _firstNameTEController.text.trim(), _lastNameTEController.text.trim(), _mobileTEController.text.trim(), _passwordTEController.text.trim());
+      if (response) {
         _clearTextFields();
         if (mounted) {
           showSnackMessage(
-              context, 'Account Creation Successfully');
+              context, _registrationController.successMessage);
         }
       } else {
         if (mounted) {
           showSnackMessage(
-              context, 'Account Creation failed', true);
+              context, _registrationController.failedMessage, true);
         }
       }
     }

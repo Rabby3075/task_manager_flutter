@@ -22,41 +22,12 @@ class NewTasksScreen extends StatefulWidget {
 
 class _NewTasksScreenState extends State<NewTasksScreen> {
 
-  bool getTaskCountSummaryInProgress = false;
-
-
-
-  TaskSummaryCountListModel taskSummaryCountListModel =
-      TaskSummaryCountListModel();
-
-  Future<void> getTaskCountSummaryList() async {
-    getTaskCountSummaryInProgress = true;
-    if (mounted) {
-      setState(() {});
-    }
-    final NetworkResponse response =
-        await NetworkCaller().getRequest(Urls.getTaskStatusCount);
-    if (response.isSuccess) {
-      taskSummaryCountListModel =
-          TaskSummaryCountListModel.fromJson(response.jsonResponse!);
-    }
-    getTaskCountSummaryInProgress = false;
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  Future<void> fullPageRefresh() async {
-    //getNewTaskList();
-    getTaskCountSummaryList();
-  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    Get.find<NewTaskController>().getNewTaskList();
-    getTaskCountSummaryList();
+    Get.find<NewTaskController>().fullPageRefresh();
   }
 
   @override
@@ -67,13 +38,10 @@ class _NewTasksScreenState extends State<NewTasksScreen> {
             final response = Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const AddNewTaskScreen()
-                )
-            );
+                    builder: (context) => const AddNewTaskScreen()));
             if (response == true) {
-              getTaskCountSummaryList();
+              Get.find<NewTaskController>().fullPageRefresh();
             }
-
           },
           child: const Icon(Icons.add),
         ),
@@ -81,51 +49,53 @@ class _NewTasksScreenState extends State<NewTasksScreen> {
           child: Column(
             children: [
               const ProfileSummary(),
-              Visibility(
-                  visible: getTaskCountSummaryInProgress == false &&
-                      (taskSummaryCountListModel.taskCountList?.isNotEmpty ??
-                          false),
-                  replacement: const LinearProgressIndicator(),
-                  child: SizedBox(
-                    height: 120,
+              GetBuilder<NewTaskController>(builder: (newTaskController) {
+                return Visibility(
+                    visible: newTaskController.getTaskCountSummaryInProgress ==
+                        false,
+                    replacement: const LinearProgressIndicator(),
+                    child: SizedBox(
+                      height: 120,
+                      child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: newTaskController.taskSummaryCountListModel
+                                  .taskCountList?.length ??
+                              0,
+                          itemBuilder: (context, index) {
+                            TaskCount taskCount = newTaskController
+                                .taskSummaryCountListModel
+                                .taskCountList![index];
+                            return FittedBox(
+                                child: SummaryCard(
+                                    count: taskCount.sum.toString(),
+                                    title: taskCount.sId ?? ''));
+                          }),
+                    ));
+              }),
+              Expanded(child:
+                  GetBuilder<NewTaskController>(builder: (newTaskController) {
+                return Visibility(
+                  visible: newTaskController.getNewTaskInProgress == false,
+                  replacement: const Center(child: CircularProgressIndicator()),
+                  child: RefreshIndicator(
+                    onRefresh: () => newTaskController.fullPageRefresh(),
                     child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
                         itemCount:
-                            taskSummaryCountListModel.taskCountList?.length ??
+                            newTaskController.taskListModel.taskList?.length ??
                                 0,
                         itemBuilder: (context, index) {
-                          TaskCount taskCount =
-                              taskSummaryCountListModel.taskCountList![index];
-                          return FittedBox(
-                              child: SummaryCard(
-                                  count: taskCount.sum.toString(),
-                                  title: taskCount.sId ?? ''));
+                          return TaskItemCard(
+                            task: newTaskController
+                                .taskListModel.taskList![index],
+                            onStatusChange: () {
+                              newTaskController.getNewTaskList();
+                            },
+                            showProgress: (inprogress) {},
+                          );
                         }),
-                  )),
-              Expanded(
-                  child: GetBuilder<NewTaskController>(
-                    builder: (newTaskController) {
-                      return Visibility(
-                visible: newTaskController.getNewTaskInProgress == false,
-                replacement: const Center(child: CircularProgressIndicator()),
-                child: RefreshIndicator(
-                      onRefresh: ()=> newTaskController.getNewTaskList(),
-                      child: ListView.builder(
-                          itemCount: newTaskController.taskListModel.taskList?.length ?? 0,
-                          itemBuilder: (context, index) {
-                            return TaskItemCard(
-                              task: newTaskController.taskListModel.taskList![index],
-                              onStatusChange: () {
-                                newTaskController.getNewTaskList();
-                              },
-                              showProgress: (inprogress) {
-                              },
-                            );
-                          }),
-                ),
-              );
-                    }
-                  ))
+                  ),
+                );
+              }))
             ],
           ),
         ));

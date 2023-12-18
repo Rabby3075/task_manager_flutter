@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_instance/src/bindings_interface.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:task_manager/ui/controllers/add_new_task_controller.dart';
+import 'package:task_manager/ui/controllers/auth_controller.dart';
+import 'package:task_manager/ui/controllers/edit_profile_controller.dart';
 import 'package:task_manager/ui/controllers/login_controller.dart';
 import 'package:task_manager/ui/controllers/new_task_controller.dart';
+import 'package:task_manager/ui/controllers/progress_task_controller.dart';
+import 'package:task_manager/ui/controllers/registration_controller.dart';
 import 'package:task_manager/ui/screens/splash_screen.dart';
 
 class TaskManager extends StatelessWidget {
@@ -48,7 +53,12 @@ class ControllerBinder extends Bindings{
   @override
   void dependencies() {
     Get.put(LoginController());
+    Get.put(RegistrationController());
+    Get.put(ProfileEditController());
     Get.put(NewTaskController());
+    Get.put(AuthController());
+    Get.put(AddNewTaskController());
+    Get.put(ProgressController());
     // TODO: implement dependencies
   }
 

@@ -1,11 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:task_manager/data/models/user_model.dart';
 import 'package:task_manager/data/network_caller/network_caller.dart';
 import 'package:task_manager/data/network_caller/network_response.dart';
 import 'package:task_manager/data/utility/urls.dart';
 import 'package:task_manager/ui/controllers/auth_controller.dart';
+import 'package:task_manager/ui/controllers/edit_profile_controller.dart';
 import 'package:task_manager/ui/widget/body_background.dart';
 import 'package:task_manager/ui/widget/profile_summary_card.dart';
 import 'package:image_picker/image_picker.dart';
@@ -24,61 +27,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _lastNameTEController = TextEditingController();
   final TextEditingController _mobileTEController = TextEditingController();
   final TextEditingController _passwordTEController = TextEditingController();
-  XFile? photo;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  bool _updateProfileInProgress = false;
+  final ProfileEditController _profileEditController = Get.find<ProfileEditController>();
+  final AuthController _authController = Get.find<AuthController>();
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _emailTEController.text = AuthController.user?.email ?? '';
-    _firstNameTEController.text = AuthController.user?.firstName ?? '';
-    _lastNameTEController.text = AuthController.user?.lastName ?? '';
-    _mobileTEController.text = AuthController.user?.mobile ?? '';
+    _emailTEController.text = _authController.user?.email ?? '';
+    _firstNameTEController.text = _authController.user?.firstName ?? '';
+    _lastNameTEController.text = _authController.user?.lastName ?? '';
+    _mobileTEController.text = _authController.user?.mobile ?? '';
   }
   Future<void>_ProfileUpdate() async {
-    Map<String,dynamic> inputData ={
-      "email":_emailTEController.text.trim(),
-      "firstName":_firstNameTEController.text.trim(),
-      "lastName":_lastNameTEController.text.trim(),
-      "mobile":_mobileTEController.text.trim(),
-      //"password":_passwordTEController.text,
-    };
-    String ?photoInBase64;
+
     if (_formKey.currentState!.validate()) {
-      _updateProfileInProgress = true;
-      if(mounted){
-        setState(() {});
-      }
-     if(_passwordTEController.text.isNotEmpty){
-       inputData['password'] = _passwordTEController.text;
-     }
-     if(photo != null){
-       List<int> imageBytes = await photo!.readAsBytes();
-       photoInBase64 = base64Encode(imageBytes);
-       inputData['photo'] = photoInBase64;
-     }
-      final NetworkResponse response =
-      await NetworkCaller()
-          .postRequest(Urls.updateProfile,body: inputData);
-      _updateProfileInProgress = false;
-      if(mounted){
-        setState(() {});
-      }
-      if(response.isSuccess){
-        AuthController.UpdateUserInformation(UserModel(
-            email: _emailTEController.text.trim(),
-            firstName: _firstNameTEController.text.trim(),
-            lastName: _lastNameTEController.text.trim(),
-            mobile: _mobileTEController.text.trim(),
-          photo: photoInBase64 ?? AuthController.user?.photo
-        ));
+     final response = await _profileEditController.ProfileUpdate(_emailTEController.text.trim(), _firstNameTEController.text.trim(), _lastNameTEController.text.trim(), _mobileTEController.text.trim(), _passwordTEController.text);
+
+      if(response){
         if(mounted) {
-          showSnackMessage(context, 'Profile Update Successfully');
+          showSnackMessage(context, _profileEditController.successMessage);
         }
       }else{
         if (mounted) {
-          showSnackMessage(context, 'Profile Update Failed', true);
+          showSnackMessage(context, _profileEditController.failedMessage, true);
         }
       }
     }
@@ -208,14 +181,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         SizedBox(
                             width: double.infinity,
-                            child: Visibility(
-                              visible: _updateProfileInProgress == false,
-                              replacement: const Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                              child: ElevatedButton(
-                                  onPressed: _ProfileUpdate,
-                                  child: const Icon(Icons.arrow_circle_right_outlined)),
+                            child: GetBuilder<ProfileEditController>(
+                              builder: (profileEditController) {
+                                return Visibility(
+                                  visible: profileEditController.updateProfileInProgress == false,
+                                  replacement: const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                  child: ElevatedButton(
+                                      onPressed: _ProfileUpdate,
+                                      child: const Icon(Icons.arrow_circle_right_outlined)),
+                                );
+                              }
                             )),
                       ],
                     ),
@@ -258,18 +235,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   onTap: () async{
                    final XFile? image = await ImagePicker().pickImage(source: ImageSource.camera);
                    if(image !=null){
-                     photo = image;
-                     if(mounted){
-                     setState(() {});
-                     }
+                     _profileEditController.photo = image;
+                     // if(mounted){
+                     // setState(() {});
+                     // }
                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.only(left: 16),
                     child: Visibility(
-                      visible: photo == null,
-                        replacement: Text(photo?.name ?? ''),
-                        child:  Text(AuthController.user?.photo ?? 'Select Photo')
+                      visible: _profileEditController.photo == null,
+                        replacement: Text(_profileEditController.photo?.name ?? ''),
+                        child:  Text(_authController.user?.photo ?? 'Select Photo')
                     ),
                   ),
                 )),
